@@ -1,0 +1,12 @@
+SELECT 
+    p.nama_posyandu, 
+    SUM(r.jumlah_ditimbang) AS total_balita_ditimbang
+FROM 
+    rekap_bulanan r
+JOIN 
+    posyandu p ON r.id_posyandu = p.id_posyandu
+WHERE 
+    r.tahun = 2026
+GROUP BY 
+    p.id_posyandu, 
+    p.nama_posyandu;
