@@ -1,0 +1,38 @@
+ ===== FITUR BARU: KOREKSI DATA =====
+CREATE TABLE koreksi_data (
+  id_koreksi       INT AUTO_INCREMENT PRIMARY KEY,
+  id_kunjungan     INT NOT NULL,
+  id_pengaju       INT NOT NULL,
+  id_penyetuju     INT NULL,
+  nama_kolom       ENUM('berat_badan','tinggi_badan','lingkar_kepala',
+                        'vitamin_a','obat_cacing','status_gizi') NOT NULL,
+  nilai_lama       VARCHAR(50) NOT NULL,
+  nilai_baru       VARCHAR(50) NOT NULL,
+  alasan           VARCHAR(255) NOT NULL,
+  status           ENUM('diajukan','disetujui','ditolak') NOT NULL DEFAULT 'diajukan',
+  tgl_pengajuan    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  tgl_putusan      DATETIME NULL,
+  catatan_putusan  VARCHAR(255) NULL,
+  CONSTRAINT fk_koreksi_kunjungan FOREIGN KEY (id_kunjungan)
+    REFERENCES kunjungan(id_kunjungan) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_koreksi_pengaju FOREIGN KEY (id_pengaju)
+    REFERENCES pengguna(id_pengguna) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_koreksi_penyetuju FOREIGN KEY (id_penyetuju)
+    REFERENCES pengguna(id_pengguna) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT ck_koreksi_beda  CHECK (nilai_lama <> nilai_baru),
+  CONSTRAINT ck_koreksi_bukan_diri CHECK (id_penyetuju IS NULL OR id_penyetuju <> id_pengaju),
+  CONSTRAINT ck_koreksi_putusan CHECK (
+    (status = 'diajukan' AND id_penyetuju IS NULL AND tgl_putusan IS NULL)
+    OR (status IN ('disetujui','ditolak') AND id_penyetuju IS NOT NULL AND tgl_putusan IS NOT NULL)
+  )
+);
+
+CREATE INDEX idx_koreksi_kunjungan ON koreksi_data(id_kunjungan);
+CREATE INDEX idx_koreksi_status    ON koreksi_data(status);
+
+
+View untuk atribut turunan hak_koreksi:
+CREATE VIEW v_hak_koreksi AS
+SELECT id_pengguna, nama, role,
+       (role IN ('bidan','admin')) AS hak_koreksi
+FROM pengguna;
